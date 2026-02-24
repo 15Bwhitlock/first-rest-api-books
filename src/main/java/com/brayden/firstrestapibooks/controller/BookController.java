@@ -1,0 +1,60 @@
+package com.brayden.firstrestapibooks.controller;
+
+
+import com.brayden.firstrestapibooks.dto.BookRequestDTO;
+import com.brayden.firstrestapibooks.dto.BookResponseDTO;
+import com.brayden.firstrestapibooks.model.Book;
+import com.brayden.firstrestapibooks.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.*;
+
+@RestController
+@AllArgsConstructor
+@RequestMapping("/books")
+@Tag(name="Books", description="API for managing books")
+public class BookController {
+    private final BookService bookService;
+
+    @GetMapping
+    @Operation(summary = "Get the list of all books", description = "Returns a list of all the books in the database")
+    @ApiResponse(responseCode = "200", description = "Books successfully retrieved")
+    public List<BookResponseDTO> findAllBooks() {
+        return bookService.findAllBooks();
+    }
+
+    @PostMapping
+    @Operation(summary = "Create a new book")
+    @ApiResponse(responseCode = "200", description = "Books successfully created")
+    public BookResponseDTO createBook(@RequestBody BookRequestDTO book){
+        return bookService.createBook(book);
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Updates an existing book by its ID")
+    @ApiResponses (value = {
+            @ApiResponse(responseCode = "200", description = "Books successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Book by that ID not found")
+    })
+    public BookResponseDTO updateBook(
+            @Parameter(description = "ID of the book to by updated", required = true) // use @Parameter to describe the variable needed for updateBook to work
+            @PathVariable String id,
+            @RequestBody BookRequestDTO book) {
+        return bookService.updateBook(id, book);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Deletes an existing book by its ID")
+    @ApiResponse(responseCode = "204", description = "Book successfully deleted by ID")
+    public void deleteBook(
+            @Parameter(description = "ID of the book to by deleted", required = true)
+            @PathVariable String id) {
+        bookService.deleteBook(id);
+    }
+}

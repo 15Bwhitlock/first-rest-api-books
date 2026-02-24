@@ -1,0 +1,7 @@
+CREATE TABLE book (
+    id VARCHAR(255) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    author VARCHAR(255) NULL,
+    price DECIMAL(10, 2) NULL
+);
+
