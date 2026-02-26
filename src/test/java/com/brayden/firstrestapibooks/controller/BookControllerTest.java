@@ -8,19 +8,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
+import java.util.List;
+
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @WebMvcTest(BookController.class)
+@Import(BookControllerTest.JacksonTestConfig.class)
 public class BookControllerTest {
 
     @MockitoBean
@@ -31,6 +39,15 @@ public class BookControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    // this is needed in order to explicitly add the bean so that @Autowired has a bean to inject for objectMapper
+    @TestConfiguration
+    static class JacksonTestConfig {
+        @Bean
+        ObjectMapper objectMapper() {
+            return new ObjectMapper();
+        }
+    }
 
     private BookRequestDTO bookRequestDTO;
     private BookResponseDTO bookResponseDTO;
@@ -52,6 +69,55 @@ public class BookControllerTest {
         bookResponseDTO.setPrice("priceTest");
     }
 
+    //----findAllBooks----
+
+    @Test
+    void testFindAllBooks_whenBooksExists_shouldReturnBookList() throws Exception {
+        when(bookService.findAllBooks()).thenReturn(List.of(bookResponseDTO));
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(bookResponseDTO.getId()))
+                .andExpect(jsonPath("$[0].name").value(bookResponseDTO.getName()))
+                .andExpect(jsonPath("$[0].author").value(bookResponseDTO.getAuthor()))
+                .andExpect(jsonPath("$[0].price").value(bookResponseDTO.getPrice()));
+        ;
+
+        verify(bookService).findAllBooks();
+    }
+
+    @Test
+    void testFindAllBooks_whenNoBooksExist_shouldReturnEmptyList() throws Exception {
+        when(bookService.findAllBooks()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        verify(bookService).findAllBooks();
+    }
+
+    //----createBook----
+
+    @Test
+    void testCreateBook_whenValidRequest_shouldReturnCreatedBook() throws Exception {
+        when(bookService.createBook(any(BookRequestDTO.class))).thenReturn(bookResponseDTO);
+
+        mockMvc.perform(post("/books")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(bookRequestDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(bookResponseDTO.getId()))
+                .andExpect(jsonPath("$.name").value(bookResponseDTO.getName()))
+                .andExpect(jsonPath("$.author").value(bookResponseDTO.getAuthor()))
+                .andExpect(jsonPath("$.price").value(bookResponseDTO.getPrice()));
+
+        verify(bookService, times(1)).createBook(any(BookRequestDTO.class));
+    }
+
+    //----updateBook----
+
     // when making a test name use this format
     // void test[Name of method to be tested]_[Situation of test]_[What test should return]
     @Test
@@ -68,8 +134,8 @@ public class BookControllerTest {
         // andExpect will have the expected value to test against after the test is over
         // second andExpect checks that the given id is the same as the one expected and so on with the others.
         mockMvc.perform(put("/books/{id}", bookId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(bookRequestDTO)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookRequestDTO)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(bookResponseDTO.getId()))
                 .andExpect(jsonPath("$.name").value(bookResponseDTO.getName()))
@@ -96,5 +162,45 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.error").value(errorMessage));
         // still only need to call the bookService updateBook once
         verify(bookService).updateBook(bookId, bookRequestDTO);
+    }
+
+    //----deleteBook----
+
+    //TODO: You need to implement 2 tests for the `deleteBook` method of the controller:
+    // 1. When the Book entity is successfully deleted.
+    // 2. When the entity with the given `ID` is not found, and handle the error.
+
+    //----findByAuthor----
+
+    @Test
+    void testFindByAuthor_whenBooksExist_shouldReturnBookList() throws Exception {
+        String author = bookResponseDTO.getAuthor();
+
+        when(bookService.findByAuthor(author))
+                .thenReturn(List.of(bookResponseDTO));
+
+        mockMvc.perform(get("/books/author/{author}", author))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].id").value(bookResponseDTO.getId()))
+                .andExpect(jsonPath("$[0].name").value(bookResponseDTO.getName()))
+                .andExpect(jsonPath("$[0].author").value(bookResponseDTO.getAuthor()))
+                .andExpect(jsonPath("$[0].price").value(bookResponseDTO.getPrice()));
+
+        verify(bookService).findByAuthor(author);
+    }
+
+    @Test
+    void testFindByAuthor_whenNoBooksExist_shouldReturnEmptyList() throws Exception {
+        String author = "Nonexistent Author";
+
+        when(bookService.findByAuthor(author)).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/books/author/{author}", author))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        verify(bookService).findByAuthor(author);
+
     }
 }

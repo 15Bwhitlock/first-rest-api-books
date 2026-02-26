@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +37,85 @@ public class BookServiceImplTest {
         // Through this call, Mockito initializes @Mock and @InjectMocks fields.
         MockitoAnnotations.openMocks(this);
     }
+
+
+    //----findAllBooks----
+
+    @Test
+    void testFindAllBooks_whenBooksExist_shouldReturnListOfBookResponseDTO() {
+        Book modelBook = new Book();
+        modelBook.setId("1");
+        modelBook.setName("Sample Book");
+        modelBook.setAuthor("Author Name");
+        modelBook.setPrice("10.99");
+
+        BookResponseDTO responseDTO = new BookResponseDTO();
+        responseDTO.setId("1");
+        responseDTO.setName("Sample Book");
+        responseDTO.setAuthor("Author Name");
+        responseDTO.setPrice("10.99");
+
+        when(bookRepository.findAll()).thenReturn(List.of(modelBook));
+
+        List<BookResponseDTO> expectedResponse = List.of(responseDTO);
+
+        List<BookResponseDTO> result = bookServiceImpl.findAllBooks();
+
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        assertEquals(expectedResponse.size(), result.size());
+
+        verify(bookRepository).findAll();
+    }
+
+    @Test
+    void testFindAllBooks_whenNoBooksExist_shouldReturnEmptyList() {
+        when(bookRepository.findAll()).thenReturn(Collections.emptyList());
+
+        List<BookResponseDTO> result = bookServiceImpl.findAllBooks();
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        verify(bookRepository).findAll();
+    }
+
+    //----createBook----
+
+    @Test
+    void testCreateBook_whenValidBook_shouldReturnBookResponseDTO() {
+        BookRequestDTO bookRequestDTO = new BookRequestDTO();
+        bookRequestDTO.setName("Sample Book");
+        bookRequestDTO.setAuthor("Author Name");
+        bookRequestDTO.setPrice("10.99");
+
+        Book modelBook = new Book();
+        modelBook.setId("1");
+        modelBook.setName("Sample Book");
+        modelBook.setAuthor("Author Name");
+        modelBook.setPrice("10.99");
+
+        BookResponseDTO responseDTO = new BookResponseDTO();
+        responseDTO.setId("1");
+        responseDTO.setName("Sample Book");
+        responseDTO.setAuthor("Author Name");
+        responseDTO.setPrice("10.99");
+
+
+        when(bookRepository.save(any(Book.class))).thenReturn(modelBook);
+
+        BookResponseDTO result = bookServiceImpl.createBook(bookRequestDTO);
+
+        assertNotNull(result);
+        assertEquals(responseDTO.getId(), result.getId());
+        assertEquals(responseDTO.getName(), result.getName());
+        assertEquals(responseDTO.getAuthor(), result.getAuthor());
+        assertEquals(responseDTO.getPrice(), result.getPrice());
+
+        verify(bookRepository).save(any(Book.class));
+    }
+
+    //----updateBook----
 
     @Test
     void testUpdateBook_whenBookExists_shouldUpdateAndReturnBook() {
@@ -98,4 +179,53 @@ public class BookServiceImplTest {
 
         verify(bookRepository, never()).save(any(Book.class));
     }
+
+
+    //----findByAuthor----
+
+    @Test
+    void testFindByAuthor_whenBooksExist_shouldReturnListOfBookResponseDTO() {
+        Book modelBook = new Book();
+        modelBook.setId("1");
+        modelBook.setName("Sample Book");
+        modelBook.setAuthor("Author Name");
+        modelBook.setPrice("10.99");
+
+        BookResponseDTO responseDTO = new BookResponseDTO();
+        responseDTO.setId("1");
+        responseDTO.setName("Sample Book");
+        responseDTO.setAuthor("Author Name");
+        responseDTO.setPrice("10.99");
+
+        when(bookRepository.findBookByAuthor("Author Name")).thenReturn(List.of(modelBook));
+
+        List<BookResponseDTO> expectedResponse = List.of(responseDTO);
+
+        List<BookResponseDTO> result = bookServiceImpl.findByAuthor("Author Name");
+
+        assertNotNull(result);
+        assertEquals(expectedResponse.size(), result.size());
+        assertEquals(expectedResponse, result);
+
+        verify(bookRepository).findBookByAuthor("Author Name");
+    }
+
+    @Test
+    void testFindByAuthor_whenNoBooksExist_shouldReturnEmptyList() {
+        when(bookRepository.findBookByAuthor("Nonexistent Author")).thenReturn(Collections.emptyList());
+
+        List<BookResponseDTO> result = bookServiceImpl.findByAuthor("Nonexistent Author");
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        verify(bookRepository).findBookByAuthor("Nonexistent Author");
+    }
+
+    //----deleteBook----
+
+    //TODO: You need to implement 2 tests for the `deleteBook` method of the service:
+    // 1. When the Book entity is successfully deleted.
+    // 2. When the entity with the given `ID` is not found, and handle the error.
+
 }

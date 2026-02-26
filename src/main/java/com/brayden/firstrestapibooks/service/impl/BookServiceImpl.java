@@ -76,6 +76,9 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(String id) {
+        if(!bookRepository.existsById(id)) {
+            throw new ApiException("No Book found by id: " + id, HttpStatus.NOT_FOUND);
+        }
         bookRepository.deleteById(id);
     }
 }
