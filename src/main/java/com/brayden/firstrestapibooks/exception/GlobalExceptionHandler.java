@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 
-@ControllerAdvice //tells the compiler that this will have methods for testing
+@ControllerAdvice // tells Spring this class handles exceptions globally
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)

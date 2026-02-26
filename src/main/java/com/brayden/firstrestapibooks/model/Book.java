@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity(name="book")
-@Table(name="book") // you dont need to specify this if entity and table name are the same
+@Table(name="book") // you don't need to specify this if entity and table names are the same
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID) // used UUID because id is a String could use Auto or Identity to auto increment

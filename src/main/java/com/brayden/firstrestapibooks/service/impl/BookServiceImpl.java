@@ -23,7 +23,7 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
 
     @Override // useful because it confirms this matches a method from the interface and helps avoid typo-based method mismatches
-    @Transactional(readOnly = true) // readOnly transactions are for read operations and can reduce unnecessary write-related work
+    @Transactional(readOnly = true) // read-only transactions are for read operations and can reduce unnecessary write-related work
     public List<BookResponseDTO> findAllBooks() {
         return bookRepository.findAll().stream()
                 .map(MapperBook::modelToResponseDto)
@@ -57,7 +57,7 @@ public class BookServiceImpl implements BookService {
     @Transactional // transactional writes will roll back if an error happens
     public BookResponseDTO updateBook(String id, BookRequestDTO book) {
         // the line below gets the info for the book we want to replace from the db using id
-        //and throws an error if that book id does not exist
+        // and throws an error if that book id does not exist
         Book bookInRepository = bookRepository.findById(id).orElseThrow(() ->
                 new ApiException("No Book found by id: " + id, HttpStatus.NOT_FOUND));
 

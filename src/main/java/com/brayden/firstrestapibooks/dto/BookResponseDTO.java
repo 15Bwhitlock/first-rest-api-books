@@ -1,10 +1,13 @@
 package com.brayden.firstrestapibooks.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+// Switched from @Getter/@Setter to @Data for simpler test setup in the test files.
+//@Getter
+//@Setter
+@Data
 public class BookResponseDTO {
     private String id;
     private String name;
