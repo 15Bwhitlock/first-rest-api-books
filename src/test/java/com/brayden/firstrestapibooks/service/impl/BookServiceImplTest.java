@@ -224,8 +224,31 @@ public class BookServiceImplTest {
 
     // ---- deleteBook ----
 
-    //TODO: You need to implement 2 tests for the `deleteBook` method of the service:
-    // 1. When the Book entity is successfully deleted.
-    // 2. When the entity with the given `ID` is not found, and handle the error.
+    @Test
+    void testDeleteBook_whenBookExists_shouldDeleteBook() {
+        String bookId = "1";
 
+        when(bookRepository.existsById(bookId)).thenReturn(true);
+
+        // nothing to return so no way to assign it to a value
+        bookServiceImpl.deleteBook(bookId);
+
+        verify(bookRepository).deleteById(bookId);
+    }
+
+    @Test
+    void testDeleteBook_whenBookNotFound_shouldReturnApiException(){
+        String bookId = "999";
+
+        when(bookRepository.existsById(bookId)).thenReturn(false);
+
+        ApiException apiException = assertThrows(ApiException.class, () -> {
+            bookServiceImpl.deleteBook(bookId);
+        });
+        assertEquals("No Book found by id: " + bookId, apiException.getMessage());
+        assertEquals(HttpStatus.NOT_FOUND, apiException.getHttpStatus());
+
+        verify(bookRepository).existsById(bookId);
+        verify(bookRepository, never()).deleteById(bookId);
+    }
 }

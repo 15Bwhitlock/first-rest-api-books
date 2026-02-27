@@ -175,6 +175,7 @@ public class BookControllerTest {
         String bookId = "1";
 
         // Use doNothing() when mocking a void method.
+        // Use only when testing controller
         doNothing().when(bookService).deleteBook(bookId);
 
         // Mocks the service delete call
