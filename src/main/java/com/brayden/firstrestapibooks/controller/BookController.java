@@ -63,9 +63,12 @@ public class BookController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deletes an existing book by its ID")
-    @ApiResponse(responseCode = "200", description = "Book successfully deleted by ID")
-    public void deleteBook(
-            @Parameter(description = "ID of the book to by deleted", required = true)
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "ID of the book to be deleted"),
+            @ApiResponse(responseCode = "404", description = "ID not found")
+    })
+    public void deleteBooks(
+            @Parameter(description = "ID of the book to be deleted")
             @PathVariable String id) {
         bookService.deleteBook(id);
     }

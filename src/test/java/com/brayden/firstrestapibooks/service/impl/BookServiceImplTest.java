@@ -16,7 +16,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -38,8 +41,7 @@ public class BookServiceImplTest {
         MockitoAnnotations.openMocks(this);
     }
 
-
-    //----findAllBooks----
+    // ---- findAllBooks ----
 
     @Test
     void testFindAllBooks_whenBooksExist_shouldReturnListOfBookResponseDTO() {
@@ -80,7 +82,7 @@ public class BookServiceImplTest {
         verify(bookRepository).findAll();
     }
 
-    //----createBook----
+    // ---- createBook ----
 
     @Test
     void testCreateBook_whenValidBook_shouldReturnBookResponseDTO() {
@@ -101,7 +103,6 @@ public class BookServiceImplTest {
         responseDTO.setAuthor("Author Name");
         responseDTO.setPrice("10.99");
 
-
         when(bookRepository.save(any(Book.class))).thenReturn(modelBook);
 
         BookResponseDTO result = bookServiceImpl.createBook(bookRequestDTO);
@@ -115,11 +116,11 @@ public class BookServiceImplTest {
         verify(bookRepository).save(any(Book.class));
     }
 
-    //----updateBook----
+    // ---- updateBook ----
 
     @Test
     void testUpdateBook_whenBookExists_shouldUpdateAndReturnBook() {
-        // This will be used as the request to change the book
+        // This will be used as the request to change the book.
         BookRequestDTO bookRequestDTO = new BookRequestDTO();
         bookRequestDTO.setName("Updated Name");
         bookRequestDTO.setAuthor("Updated Author");
@@ -141,7 +142,7 @@ public class BookServiceImplTest {
 
         // Returns an Optional containing the existing book with ID 1.
         when(bookRepository.findById("1")).thenReturn(Optional.of(bookInRepository));
-        // this is what will return if a save works the way it should
+        // This is what save() should return when successful.
         when(bookRepository.save(bookInRepository)).thenReturn(updatedBook);
 
         // Run the service method under test.
@@ -160,7 +161,7 @@ public class BookServiceImplTest {
 
     @Test
     void testUpdateBook_whenBookNotFound_shouldThrowApiException() {
-        // ues the same data as what was used for other test to continue continuity
+        // Uses the same data as the other test to keep continuity.
         BookRequestDTO bookRequestDTO = new BookRequestDTO();
         bookRequestDTO.setName("Updated Name");
         bookRequestDTO.setAuthor("Updated Author");
@@ -170,7 +171,7 @@ public class BookServiceImplTest {
 
         when(bookRepository.findById(idTest)).thenReturn(Optional.empty());
 
-//        proves that an exception was thrown
+        // Proves that an exception was thrown.
         ApiException apiException = assertThrows(ApiException.class, () -> {
             bookServiceImpl.updateBook(idTest, bookRequestDTO);
         });
@@ -180,8 +181,7 @@ public class BookServiceImplTest {
         verify(bookRepository, never()).save(any(Book.class));
     }
 
-
-    //----findByAuthor----
+    // ---- findByAuthor ----
 
     @Test
     void testFindByAuthor_whenBooksExist_shouldReturnListOfBookResponseDTO() {
@@ -222,7 +222,7 @@ public class BookServiceImplTest {
         verify(bookRepository).findBookByAuthor("Nonexistent Author");
     }
 
-    //----deleteBook----
+    // ---- deleteBook ----
 
     //TODO: You need to implement 2 tests for the `deleteBook` method of the service:
     // 1. When the Book entity is successfully deleted.

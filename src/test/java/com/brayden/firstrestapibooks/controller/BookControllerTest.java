@@ -21,11 +21,18 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 
 @WebMvcTest(BookController.class)
 @Import(BookControllerTest.JacksonTestConfig.class)
@@ -40,7 +47,7 @@ public class BookControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // this is needed in order to explicitly add the bean so that @Autowired has a bean to inject for objectMapper
+    // This is needed to explicitly add the bean so @Autowired can inject ObjectMapper.
     @TestConfiguration
     static class JacksonTestConfig {
         @Bean
@@ -52,16 +59,16 @@ public class BookControllerTest {
     private BookRequestDTO bookRequestDTO;
     private BookResponseDTO bookResponseDTO;
 
-    // this method runs before every test
+    // This method runs before every test.
     @BeforeEach
     void setUp() {
-        // this is mock data sent in the request
+        // This is mock data sent in the request.
         bookRequestDTO = new BookRequestDTO();
         bookRequestDTO.setAuthor("authorTest");
         bookRequestDTO.setName("nameTest");
         bookRequestDTO.setPrice("priceTest");
 
-        // this is mock data returned in the response
+        // This is mock data returned in the response.
         bookResponseDTO = new BookResponseDTO();
         bookResponseDTO.setId("1");
         bookResponseDTO.setAuthor("authorTest");
@@ -69,7 +76,7 @@ public class BookControllerTest {
         bookResponseDTO.setPrice("priceTest");
     }
 
-    //----findAllBooks----
+    // ---- findAllBooks ----
 
     @Test
     void testFindAllBooks_whenBooksExists_shouldReturnBookList() throws Exception {
@@ -82,8 +89,6 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$[0].name").value(bookResponseDTO.getName()))
                 .andExpect(jsonPath("$[0].author").value(bookResponseDTO.getAuthor()))
                 .andExpect(jsonPath("$[0].price").value(bookResponseDTO.getPrice()));
-        ;
-
         verify(bookService).findAllBooks();
     }
 
@@ -98,7 +103,7 @@ public class BookControllerTest {
         verify(bookService).findAllBooks();
     }
 
-    //----createBook----
+    // ---- createBook ----
 
     @Test
     void testCreateBook_whenValidRequest_shouldReturnCreatedBook() throws Exception {
@@ -116,23 +121,22 @@ public class BookControllerTest {
         verify(bookService, times(1)).createBook(any(BookRequestDTO.class));
     }
 
-    //----updateBook----
+    // ---- updateBook ----
 
-    // when making a test name use this format
+    // When naming tests, use this format.
     // void test[Name of method to be tested]_[Situation of test]_[What test should return]
     @Test
     void testUpdateBook_whenBookExists_shouldReturnUpdatedBook() throws Exception {
         String bookId = "1";
 
-        // the line below mocks updateBook to return a value as if updateBook ran with this response
+        // The line below mocks updateBook to return a value as if updateBook ran with this response.
         when(bookService.updateBook(bookId, bookRequestDTO)).thenReturn(bookResponseDTO);
-        // the perform() is used to do a test task
-        // use put() to specify the url path to request
-        // bookId specifies what id to use for the request
-        // contentType refers to the type of content that should be sent to the endpoint in this case we want json
-        // content holds the object
-        // andExpect will have the expected value to test against after the test is over
-        // second andExpect checks that the given id is the same as the one expected and so on with the others.
+        // perform() is used to run the test request.
+        // put() specifies the URL path to request.
+        // bookId specifies the id to use for the request.
+        // contentType is the type of content sent to the endpoint (JSON here).
+        // content holds the request object.
+        // andExpect checks expected values after the request completes.
         mockMvc.perform(put("/books/{id}", bookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookRequestDTO)))
@@ -141,8 +145,8 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$.name").value(bookResponseDTO.getName()))
                 .andExpect(jsonPath("$.author").value(bookResponseDTO.getAuthor()))
                 .andExpect(jsonPath("$.price").value(bookResponseDTO.getPrice()));
-        // times is used to specify how many times we expect this method to be called
-        // in this case the method is only called once so it is not needed
+        // times() specifies how many calls are expected.
+        // Here the method is called once.
         verify(bookService, times(1)).updateBook(bookId, bookRequestDTO);
     }
 
@@ -151,26 +155,55 @@ public class BookControllerTest {
         String bookId = "1";
         String errorMessage = "Book by that ID not found";
 
-        // thenThrow() is used specifically when an error is supposed to be thrown
+        // thenThrow() is used when an error is expected.
         when(bookService.updateBook(bookId, bookRequestDTO)).thenThrow(new ApiException(errorMessage, HttpStatus.NOT_FOUND));
 
-        // In the case of an error we only expect to return an error message so that is what we will check
+        // In this error case, we expect an error message in the response.
         mockMvc.perform(put("/books/{id}", bookId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(bookRequestDTO)))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value(errorMessage));
-        // still only need to call the bookService updateBook once
+        // We still expect one call to bookService.updateBook.
         verify(bookService).updateBook(bookId, bookRequestDTO);
     }
 
-    //----deleteBook----
+    // ---- deleteBook ----
 
-    //TODO: You need to implement 2 tests for the `deleteBook` method of the controller:
-    // 1. When the Book entity is successfully deleted.
-    // 2. When the entity with the given `ID` is not found, and handle the error.
+    @Test
+    void testDeleteBook_whenBookExists_shouldReturnStatusOk() throws Exception {
+        String bookId = "1";
 
-    //----findByAuthor----
+        // Use doNothing() when mocking a void method.
+        doNothing().when(bookService).deleteBook(bookId);
+
+        // Mocks the service delete call
+        // and verifies the endpoint returns 200 OK.
+        mockMvc.perform(delete("/books/{id}", bookId))
+                .andExpect(status().isOk());
+
+        verify(bookService).deleteBook(bookId);
+    }
+
+    @Test
+    void testDeleteBook_whenBookNotFound_shouldReturnApiException() throws Exception {
+        String bookId = "1";
+        // I can choose the error message here.
+        String messageException = "ID not found";
+
+        // Use this when mocking a void method and expecting an error.
+        doThrow(new ApiException(messageException, HttpStatus.NOT_FOUND)).when(bookService).deleteBook(bookId);
+
+        // Mocks the service delete call
+        // and verifies the endpoint fails.
+        mockMvc.perform(delete("/books/{id}", bookId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value(messageException));
+
+        verify(bookService).deleteBook(bookId);
+    }
+
+    // ---- findByAuthor ----
 
     @Test
     void testFindByAuthor_whenBooksExist_shouldReturnBookList() throws Exception {
@@ -201,6 +234,5 @@ public class BookControllerTest {
                 .andExpect(jsonPath("$").isEmpty());
 
         verify(bookService).findByAuthor(author);
-
     }
 }
